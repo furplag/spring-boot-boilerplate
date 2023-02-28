@@ -1,0 +1,78 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head></head>
+<body>
+
+<th:block th:fragment="header">
+<div id="header" class="col sticky-top">
+  <header class="row">
+    <div class="col">
+      <div class="row bg-dark">
+        <div class="col-auto p-0">
+          <a th:href="@{/}" class="btn" tabindex="-1">
+            <span class="h3 text-light d-none d-md-block" th:text="|${#strings.toUpperCase(site)}|"></span>
+            <span class="h4 text-light d-block d-md-none" th:text="|${#strings.toUpperCase(site)}|"></span>
+          </a>
+        </div>
+        <div class="col"></div>
+        <th:block th:with="user=${T(jp.furplag.sandbox.reflect.SavageReflection).read(#authentication.principal)}" sec:authorize="isAuthenticated()">
+        <div class="col-auto text-end d-flex align-items-center p-2 border-light" style="border-width: 0 0 0 2px; border-style: dashed;">
+          <a href="#profile" data-bs-toggle="collapse" class="btn btn-lg btn-outline-light rounded-circle p-0 text-center border-4" style="width: 2.5rem; height: 2.5rem;">
+            <th:block th:text="${user.getOrDefault('displayName', #authentication.name).substring(0, 1).toUpperCase()}"></th:block>
+          </a>
+        </div>
+        </th:block>
+      </div>
+    </div>
+    <div class="w-100 pt-1 bg-dark" style="opacity: .35;"></div>
+  </header>
+</div>
+    <th:block th:with="user=${T(jp.furplag.sandbox.reflect.SavageReflection).read(#authentication.principal)}" sec:authorize="isAuthenticated()">
+<div class="row" style="position: fixed;">
+    <div class="col"></div>
+    <div id="profile" class="col-auto text-end collapse p-1 pt-0">
+      <div class="d-flex justify-content-center align-items-center bg-dark text-light p-4 pb-2">
+        <div class="border border-4 border-light rounded-circle" style="width: 5rem; height: 5rem;">
+        </div>
+      </div>
+      <div class="fs-3 bg-dark text-light text-center px-2 text-break">
+        <span th:text="|${user.getOrDefault('displayName', #authentication.name)}|"></span>
+      </div>
+      <div class="bg-dark">
+        <div class="w-100 border-light" style="border-style: dashed; border-width: 0 0 2px 0;"></div>
+        <a class="btn btn-link text-light" th:href="@{__${@environment.getProperty('project.boilerplate.security.form-login.logout-url')?:'/logout'}__}">
+          <th:block th:text="${#messages.msgOrNull('page.title.logout')?:'Sign out'}"></th:block>
+        </a>
+      </div>
+    </div>
+</div>
+    </th:block>
+</th:block>
+
+<th:block th:fragment="resultMessages">
+  <div aria-live="polite" aria-atomic="true" style="position: relative;">
+    <div id="resultMessages" style="position: fixed; top: 2rem; right: 0; opacity: .85;">
+          <div class="toast fade mt-2 mr-2 mw-100" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header rounded" th:classAppend="|bg-danger|">
+          <span class="h5 mb-1 text-light text-nowrap" th:text="|${resultMessages}|"></span>
+          <button type="button" class="ml-2 mb-2 close" data-dismiss="toast" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+      </div>
+
+      <th:block th:each="m, ms : ${resultMessages}">
+      <div class="toast fade mt-2 mr-2 mw-100" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header rounded" th:classAppend="|bg-${m.left}|">
+          <span class="h5 mb-1 text-light text-nowrap" th:text="${#messages.msgWithParams(m.middle, m.right)}"></span>
+          <button type="button" class="ml-2 mb-2 close" data-dismiss="toast" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+      </div>
+      </th:block>
+    </div>
+  </div>
+</th:block>
+
+</body>
+</html>

@@ -20,14 +20,14 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.springFramework.boot</groupId>
+    <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.5.0</version>
+    <version>2.5.2</version>
     <relativePath />
   </parent>
   <groupId>jp.furplag.sandbox.boot</groupId>
   <artifactId>spring-boot-boilerplate</artifactId>
-  <version>2.5.0</version>
+  <version>2.5.2</version>
   <packaging>pom</packaging>
   <name>${project.artifactId}</name>
   <description>we will act anything more faster, easier .</description>
@@ -66,35 +66,38 @@
   </issueManagement>
 
   <modules>
+    <module>spring-boot-boilerplate-security</module>
+    <module>spring-boot-boilerplate-mvc</module>
   </modules>
 
   <properties>
-    <java.version>16</java.version>
+    <java.version>11</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <project.build.jacoco.repoToken></project.build.jacoco.repoToken>
 
+    <spring-boot-starter.version>2.5.2</spring-boot-starter.version>
+
     <bootstrap.version>5.0.1</bootstrap.version>
     <bootstrap-notify.version>3.1.3-1</bootstrap-notify.version>
-    <font-awesome.version>5.15.2</font-awesome.version>
+    <font-awesome.version>5.15.3</font-awesome.version>
     <google-java-format.version>1.10.0</google-java-format.version>
     <guava.version>30.1.1-jre</guava.version>
     <jquery.version>3.6.0</jquery.version>
     <jquery-i18n-properties.version>1.2.7</jquery-i18n-properties.version>
-    <relic.version>4.0.1</relic.version>
-    <spring-boot-starter.version>2.5.0</spring-boot-starter.version>
-    <text-commonize.version>2.2.0</text-commonize.version>
+    <lombok.version>1.18.26</lombok.version>
+    <relic.version>5.1.0</relic.version>
     <thymeleaf-expression-processor.version>2.0.1</thymeleaf-expression-processor.version>
     <thymeleaf-layout-dialect.version>2.5.3</thymeleaf-layout-dialect.version>
     <thymeleaf-spring-environment-dialect.version>1.0.1</thymeleaf-spring-environment-dialect.version>
-    <webjars-locator.version>0.40</webjars-locator.version>
-    <webjars-locator-core.version>0.46</webjars-locator-core.version>
+    <webjars-locator.version>0.41</webjars-locator.version>
+    <webjars-locator-core.version>0.47</webjars-locator-core.version>
     <woothee-java.version>1.11.0</woothee-java.version>
 
     <coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
-    <jacoco-maven-plugin.version>0.8.6</jacoco-maven-plugin.version>
+    <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
     <license-maven-plugin.version>3.0</license-maven-plugin.version>
     <site-maven-plugin.version>0.12</site-maven-plugin.version>
   </properties>
@@ -342,11 +345,6 @@
         <artifactId>relic</artifactId>
         <version>${relic.version}</version>
       </dependency>
-      <dependency>
-        <groupId>jp.furplag.sandbox</groupId>
-        <artifactId>text-commonize</artifactId>
-        <version>${text-commonize.version}</version>
-      </dependency>
 
       <dependency>
         <groupId>nz.net.ultraq.thymeleaf</groupId>
@@ -401,8 +399,8 @@
   <repositories>
 
     <repository>
-      <id>jp.furplag.sandbox.boot.boilerplate-parent</id>
-      <url>https://raw.github.com/furplag/spring-boot-starter-parent/mvn-repo/</url>
+      <id>jp.furplag.sandbox.boot.boilerplate</id>
+      <url>https://raw.github.com/furplag/spring-boot-boilerplate/mvn-repo/</url>
       <snapshots>
         <enabled>true</enabled>
         <updatePolicy>always</updatePolicy>
@@ -412,15 +410,6 @@
     <repository>
       <id>jp.furplag.sandbox.relic</id>
       <url>https://raw.github.com/furplag/relic/mvn-repo/</url>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-      </snapshots>
-    </repository>
-
-    <repository>
-      <id>jp.furplag.sandbox.text-commonize</id>
-      <url>https://raw.github.com/furplag/text-commonize/mvn-repo/</url>
       <snapshots>
         <enabled>true</enabled>
         <updatePolicy>always</updatePolicy>

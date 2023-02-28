@@ -1,0 +1,58 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  layout:decorate="~{scaffolds/refilled}"
+  th:lang="${(#locale?:T(java.util.Locale).default).language}">
+<head>
+  <meta charset="UTF-8" />
+  <title th:text="${#messages.msgOrNull('page.title.login')?:'Sign in'}"></title>
+</head>
+<body>
+  <section layout:fragment="mainForm">
+    <form role="form" th:action="@{'/login'}" method="POST" id="mainForm" name="mainForm" autocomplete="off">
+  </section>
+  <section layout:fragment="mainFormEnd">
+    </form>
+  </section>
+
+  <section layout:fragment="content">
+    <div class="row justify-content-sm-center">
+      <div class="col-sm-8 col-md-6 mt-2">
+        <div class="row gap-2">
+          <h1 th:text="${#messages.msgOrNull('page.title.login')?:'Sign in'}"></h1>
+          <div class="col">
+            <div class="form-floating" th:with="usernameParameter=${@environment.getProperty('project.boilerplate.security.form-login.username-parameter')?:'username'}">
+              <input type="text" th:name="${usernameParameter}" th:id="${usernameParameter}" class="form-control" placeholder="" autofocus required />
+              <label th:for="${usernameParameter}" th:text="|${#messages.msgOrNull('login-form.__${usernameParameter}__.label')?:'Username'}|"></label>
+            </div>
+          </div>
+          <div class="w-100"></div>
+          <div class="col">
+            <div class="form-floating" th:with="passwordParameter=${@environment.getProperty('project.boilerplate.security.form-login.password-parameter')?:'password'}">
+              <input type="password" th:name="${passwordParameter}" th:id="${passwordParameter}" class="form-control" placeholder="" />
+              <label th:for="${passwordParameter}" th:text="|${#messages.msgOrNull('login-form.__${passwordParameter}__.label')?:'Password'}|"></label>
+            </div>
+          </div>
+          <div class="w-100"></div>
+          <th:block th:if="${@environment.getProperty('project.boilerplate.security.o-auth2-login.enabled')?:false}">
+          </th:block>
+          <hr />
+          <div class="col d-grid">
+            <button type="submit" name="login" class="btn btn-outline-dark btn-lg" th:text="${#messages.msgOrNull('login-form.login.label')?:'Sign in'}"></button>
+          </div>
+          <div class="w-100"></div>
+          <div class="col text-center" th:with="exception=${SPRING_SECURITY_LAST_EXCEPTION?:SPRING_SECURITY_403_EXCEPTION}">
+          <th:block th:with="loginFailureMessage=${#messages.msgOrNull('error.__${exception.class.name}__.message')?:exception.localizedMessage?:exception.message}" th:if="${exception}">
+            <div class="h3" th:classAppend="${'AuthenticationCredentialsNotFoundException'.equalsIgnoreCase(exception.class.simpleName) ? 'text-muted' : 'text-danger'}">
+              <th:block th:text="|${loginFailureMessage}${loginFailureMessage.endsWith('.') ? '' : ' .'}|"></th:block>
+            </div>
+          </th:block>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

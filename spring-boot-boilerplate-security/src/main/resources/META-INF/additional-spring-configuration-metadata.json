@@ -1,0 +1,4 @@
+{"properties": [{
+  "name": "project.boilerplate.security",
+  "type": "jp.furplag.sandbox.boot.configure.security.SecurityBoilerplate.Properties"
+}]}

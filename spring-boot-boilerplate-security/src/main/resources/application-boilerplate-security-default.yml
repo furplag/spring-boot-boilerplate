@@ -1,0 +1,45 @@
+project:
+  boilerplate:
+    security:
+      debug: false
+      basic:
+        enabled: false
+      csrf:
+        enabled: true
+        cookie-name: XSRF-TOKEN
+        header-name: X-XSRF-TOKEN
+        ignores:
+        - /api/public/**
+        parameter-name: _csrf
+        session-attribute-name: CSRF_TOKEN
+        cookie-domain: ${server.servlet.session.cookie.domain}
+        cookie-path: ${server.servlet.session.cookie.path}
+        cookie-max-age: ${server.servlet.session.cookie.max-age}
+        cookie-secure: ${server.servlet.session.cookie.secure}
+        cookie-http-only: ${server.servlet.session.cookie.http-only}
+      form-login:
+        enabled: true
+        anonymously-accessibles:
+        - /*.ico
+        - /api/public/**
+        - /css/**
+        - /error/**
+        - /img/**
+        - /js/**
+        - /libs/**
+        - /webjars/**
+        gateway-enabled: false
+        login-url: /login
+        login-processing-url: /login
+        login-failure-url: /unauthorized
+        login-success-url: /home
+        logout-confirm-required: false
+        logout-url: /logout
+        logout-processing-url: /logout
+        logout-success-url: ${project.boilerplate.security.form-login.login-url}
+        session-expired-url: /expired
+        username-parameter: username
+        password-parameter: password
+      o-auth2-login:
+        enabled: false
+      ignores:

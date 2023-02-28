@@ -1,0 +1,25 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  layout:decorate="~{scaffolds/refilled}"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+  th:lang="${(#locale?:T(java.util.Locale).default).language}">
+<head>
+  <meta charset="UTF-8" />
+  <title>Index Page</title>
+</head>
+<body>
+  <section layout:fragment="content">
+  </section>
+
+  <section th:fragment="mapExtract(map={}, var='v', varStatus='vs')">
+    <th:block th:each="__${var}__,__${varStatus}__:${map}">
+      <th:block th:replace="::mapExtract(T(jp.furplag.sandbox.reflect.SavageReflection).read(__${var}__), '__${var}____${var}__', '__${varStatus}____${varStatus}__')"></th:block>
+
+
+    </th:block>
+  </section>
+
+</body>
+</html>

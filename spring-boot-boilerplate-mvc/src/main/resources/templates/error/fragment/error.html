@@ -1,0 +1,85 @@
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+  th:lang="${(#locale?:T(java.util.Locale).default).language}">
+<head></head>
+<body>
+
+  <section th:fragment="default">
+    <h1 th:text="|${httpStatus.value} ${httpStatus.reasonPhrase}|"></h1>
+    <p class="ps-2" th:text="|${#messages.msgOrNull('error.__${httpStatus.value}__.message')?:(T(java.util.Set).of('No message available', '__${httpStatus.reasonPhrase}__', '').contains(T(java.util.Objects).toString(message)) ? '' : message)}|"></p>
+    <div class="row justify-content-sm-center ps-2">
+      <div class="col">
+        <h2 th:text="${#messages.msgOrNull('label.errorAttributes')?:'Error'}"></h2>
+      </div>
+      <div class="w-100"></div>
+      <div class="col-auto">
+  <th:block th:each="v, vs : ${ T(java.util.List).of('path', 'status', 'error', 'message', 'timestamp')}">
+        <p class="ps-2"><strong th:text="|${v}: |" th:if="${__${v}__}"></strong></p>
+  </th:block>
+      </div>
+      <div class="col">
+  <th:block th:each="v, vs : ${ T(java.util.List).of('path', 'status', 'error', 'message')}">
+        <p th:text="${__${v}__}" th:if="${__${v}__}"></p>
+  </th:block>
+  <th:block th:with="timestamp=${(T(java.time.ZonedDateTime).ofInstant(timestamp.toInstant(), (timeZone?:T(java.util.TimeZone).default).toZoneId()))}" th:if="${timestamp}">
+        <p class="mb-0" th:text="${timestamp.format(T(java.time.format.DateTimeFormatter).ofLocalizedDateTime(T(java.time.format.FormatStyle).LONG, T(java.time.format.FormatStyle).LONG).localizedBy(#locale))}"></p>
+        <p th:text="|( ${timestamp.withZoneSameInstant(T(java.time.ZoneOffset).UTC)} )|"></p>
+  </th:block>
+      </div>
+      <hr />
+      <div class="col-sm-8 col-md-6 mt-2 mb-4">
+        <div class="d-grid">
+          <a th:href="@{${(#authentication.authenticated) ? (previousPage?:@environment.getProperty('project.boilerplate.security.form-login.login-success-url')?:'/home') : '/'}}" class="btn btn-lg btn-outline-dark"><span th:text="${#messages.msgOrNull('label.previous')?:'return to Previous page'}"></span></a>
+        </div>
+      </div>
+
+<th:block th:if="${traceable?:false}">
+  <th:block th:if="${exception}">
+      <div class="w-100"></div>
+      <div class="col px-2">
+        <h3 th:text="${#messages.msgOrNull('label.errorAttributes.exception')?:'Exception'}"></h3>
+        <p class="ps-2 d-inline-block"><strong th:text="${exception}"></strong></p>
+        <button data-copying class="btn btn-outline-dark">
+          <span class="copying" th:text="${#messages.msgOrNull('label.copy.to.clipboard')?:'Copy to clipboard'}"></span>
+        </button>
+        <div class="position-relative">
+          <div class="toast position-absolute top-0 start-0 w-100 border-0 rounded-0 px-2" data-bs-delay="2500" style="background-color: transparent; box-shadow: none;" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-body text-center bg-success" th:text="${#messages.msgOrNull('label.copy.to.clipboard')?:'✔ Copied'}"></div>
+          </div>
+          <pre class="m-2 p-2 overflow-auto bg-dark text-light" style="max-height: 80vh;" th:text="${trace}"></pre>
+        </div>
+      </div>
+      <script th:inline="javascript">/*<![CDATA[*/
+        $('[data-copying]').on('click', (e) => {
+          const copying = document.createElement('textarea');
+          copying.style.width = 0;
+          copying.style.height = 0;
+          copying.textContent = e.currentTarget.parentNode.querySelector('pre').textContent;
+          e.currentTarget.parentNode.insertBefore(copying, e.currentTarget);
+          copying.select();
+          document.execCommand('copy') && $('.toast', e.currentTarget.parentNode).toast('show');
+          e.currentTarget.parentNode.removeChild(copying);
+        });
+      /*]]>*/</script>
+  </th:block>
+  <th:block th:if="${errors}">
+      <div class="w-100"></div>
+      <div class="col">
+        <h3 th:text="${#messages.msgOrNull('label.errorAttributes.errors')?:'Binding Errors'}"></h3>
+      </div>
+      <div class="w-100"></div>
+      <div class="col">
+        <th:block th:each="vv, vvs : ${T(jp.furplag.sandbox.reflect.SavageReflection).read(v)}">
+          <p class="ps-2" th:text="${vv}" th:classAppend="${vvs.last ? '' : 'mb-0'}"></p>
+        </th:block>
+      </div>
+  </th:block>
+      <div class="w-100 mb-4"></div>
+</th:block>
+    </div>
+  </section>
+
+</body>
+</html>
