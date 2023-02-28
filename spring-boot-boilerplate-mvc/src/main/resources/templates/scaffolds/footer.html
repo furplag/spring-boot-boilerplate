@@ -1,0 +1,21 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head></head>
+<body>
+
+<th:block th:fragment="footer">
+<footer id="footer" class="row mt-1 bg-dark">
+  <div class="col pt-1 pb-1 bg-light text-right">
+    <th:block layout:fragment="commandBar" th:remove="tag"></th:block>
+  </div>
+  <div class="w-100"></div>
+  <div class="col bg-light pl-1" th:with="startYear=${@environment.getProperty('project.inception-year')?:T(java.time.LocalDate).now().year},currentYear=${T(java.time.LocalDate).now().year}">
+    <button type="button" disabled="disabled" class="btn btn-link pl-0" th:text="|&copy;${startYear}${startYear == currentYear ? '' : '-'}${startYear == currentYear ? '' : currentYear} ${site} project all rights reserved .|" tabindex="-1"></button>
+  </div>
+</footer>
+</th:block>
+
+</body>
+</html>

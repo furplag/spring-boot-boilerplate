@@ -1,0 +1,49 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+  th:with="site=${@environment.getProperty('server.servlet.application-display-name')?:@environment.getProperty('server.servlet.context-path')?:'app'}"
+  th:lang="${(#locale?:T(java.util.Locale).default).language}">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=1" />
+<meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}" />
+<meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf != null}" />
+<title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE" th:text="${#strings.toUpperCase(site)}"></title>
+<meta th:replace="scaffolds/misc::standardHead" th:remove="tag" />
+<script th:inline="javascript">/*<![CDATA[*/
+const refill = (topMargin, bottomMargin) => { document.querySelectorAll('#mainContent+.refill').forEach((refill) => {refill.style.minHeight=`calc(100vh - ${(~~topMargin + ~~bottomMargin)}px)`;}) }
+/*]]>*/</script>
+</head>
+<body class="bg-dark">
+<div id="loadingState" class="w-100 min-vh-100 bg-dark invisible" style="position: fixed; z-index: 5001; opacity: .25;">
+  <div class="d-flex min-vh-100">
+    <div class="flex-grow-1 text-center align-self-center">
+      <i class="fas fa-5x fa-spinner fa-pulse text-light"></i>
+    </div>
+  </div>
+</div>
+<th:block layout:fragment="mainForm" th:remove="tag"></th:block>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col">
+      <div class="row">
+        <th:block th:replace="scaffolds/header::header" th:remove="tag"></th:block>
+        <div class="w-100"></div>
+        <div id="mainContent" class="col bg-light ml-1">
+          <th:block layout:fragment="content" th:remove="tag"></th:block>
+        </div>
+        <div class="col-auto refill p-0 pl-1"></div>
+      </div>
+      <div th:replace="scaffolds/footer::footer" th:remove="tag"></div>
+    </div>
+  </div>
+</div>
+<th:block layout:fragment="mainFormEnd" th:remove="tag"></th:block>
+<th:block layout:fragment="subForm" th:remove="tag"></th:block>
+<th:block th:replace="scaffolds/misc::standardFoot" th:remove="tag"></th:block>
+<script th:inline="javascript">/*<![CDATA[*/$(() => refill($('#header').outerHeight(true), $('#footer').outerHeight(true)));/*]]>*/</script>
+<th:block layout:fragment="appendScript" th:remove="tag"></th:block>
+</body>
+</html>

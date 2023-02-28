@@ -1,0 +1,18 @@
+project:
+  boilerplate:
+    mvc:
+      i18n:
+        enabled: true
+        locale: ${spring.web.locale}
+        time-zone:
+        param-name: locale
+        cookie-domain: ${server.servlet.session.cookie.domain}
+        cookie-path: ${server.servlet.session.cookie.path}
+        cookie-max-age: ${server.servlet.session.cookie.max-age}
+        cookie-secure: ${server.servlet.session.cookie.secure}
+        cookie-http-only: ${server.servlet.session.cookie.http-only}
+        validation-message-prefix: ""
+      useragent:
+        enabled: true
+        attribute-name: userAgent
+

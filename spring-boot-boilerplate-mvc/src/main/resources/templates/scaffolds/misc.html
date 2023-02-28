@@ -1,0 +1,49 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head></head>
+<body>
+
+<th:block th:fragment="standardHead">
+<link rel="stylesheet" th:href="@{/webjars/font-awesome/css/all.min.css}" />
+<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap-reboot.min.css}" />
+<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
+<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+</th:block>
+
+<th:block th:fragment="standardFoot">
+<script th:src="@{/webjars/font-awesome/js/all.min.js}"></script>
+<script th:src="@{/webjars/font-awesome/js/v4-shims.min.js}"></script>
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:inline="javascript">/*<![CDATA[*/ const fileUploadMaxSize = /*[[${T(org.springframework.util.unit.DataSize).parse(@environment.getProperty('spring.servlet.multipart.max-file-size')?:'1MB').toBytes()}]]*/0; /*]]>*/</script>
+<script th:inline="javascript" sec:authorize="isAuthenticated()" th:if="${__${#messages.msgOrNull('session.resuscitate')?:'false'}__}">/*<![CDATA[*/
+let sessionTimeout = /*[[${@environment.getProperty('server.servlet.session.timeout')?:1800}]]*/'';
+if (/^\d+ms$/.test(sessionTimeout)) {
+  sessionTimeout = ~~(sessionTimeout.replace(/\D/gi, ''));
+} else if (/^\d+m$/.test(sessionTimeout)) {
+  sessionTimeout = ~~(sessionTimeout.replace(/\D/gi, '')) * 60000;
+} else {
+  sessionTimeout = ~~(sessionTimeout.replace(/\D/gi, '')) * 1000;
+}
+if (sessionTimeout < 1) {
+  sessionTimeout = 1800000;
+}
+$(function() {
+  let resuscitator = setInterval(function() {
+    $.ajax({
+      async: true,
+      cache: false,
+      data: {},
+      dataType: 'json',
+      method: 'get',
+      timeout: 2000,
+      url: '/resuscitate',
+    }).done(function (data, textStatus, jqXhr) {}).fail(function (jqXhr, textStatus, errorThrown) {clearInterval(resuscitator)})
+    .always(function() {})}, sessionTimeout * 0.5)
+})
+/*]]>*/</script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  layout:decorate="~{scaffolds/refilled}"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+  th:with="httpStatus=${httpStatus?:T(org.springframework.http.HttpStatus).resolve(status?:500)}"
+  th:lang="${(#locale?:T(java.util.Locale).default).language}">
+<head>
+  <meta charset="UTF-8" />
+  <title th:text="|${httpStatus.value} ${httpStatus.reasonPhrase}|"></title>
+</head>
+<body>
+  <section layout:fragment="content">
+<th:block th:replace="error/fragment/error::default" th:remove="tag"></th:block>
+  </section>
+</body>
+</html>
