@@ -5,8 +5,8 @@
   <parent>
     <groupId>jp.furplag.sandbox.boot</groupId>
     <artifactId>spring-boot-boilerplate</artifactId>
-    <version>2.5.2</version>
-    <relativePath>../pom.xml</relativePath>
+    <relativePath>../</relativePath>
+    <version>2.7.9</version>
   </parent>
   <groupId>jp.furplag.sandbox.boot</groupId>
   <artifactId>spring-boot-boilerplate-security</artifactId>

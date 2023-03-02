@@ -72,6 +72,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import nz.net.ultraq.thymeleaf.LayoutDialect;
 
 public interface MvcBoilerplate {
 
@@ -120,6 +121,7 @@ public interface MvcBoilerplate {
     }
     /** {@inheritDoc} */ @Bean @ConditionalOnProperty(prefix = "project.boilerplate.mvc.i18n", name = "enabled", matchIfMissing = true) @Override public ErrorViewResolver errorViewResolver(ApplicationContext applicationContext, Resources resources) { return super.errorViewResolver(applicationContext, resources); }
     /** {@inheritDoc} */ @Bean @ConditionalOnProperty(prefix = "project.boilerplate.mvc.i18n", name = "enabled", matchIfMissing = true) @Override public LocaleResolver localeResolver() { return super.localeResolver(); }
+    /** {@inheritDoc} */ @Bean @Override public LayoutDialect layoutDialect() { return super.layoutDialect(); }
     /** {@inheritDoc} */ @PostConstruct @Override public void postConstruct() {
       super.postConstruct();
       if (properties.i18n.isEnabled()) {
@@ -227,6 +229,9 @@ public interface MvcBoilerplate {
           return sessionLocaleResolver.resolveLocale(request);
         }
       };
+    }
+    protected LayoutDialect layoutDialect() {
+      return new LayoutDialect();
     }
 
     @PostConstruct protected void postConstruct() {
