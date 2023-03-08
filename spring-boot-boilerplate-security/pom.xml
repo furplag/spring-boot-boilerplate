@@ -22,13 +22,18 @@
   <parent>
     <groupId>jp.furplag.sandbox.boot</groupId>
     <artifactId>spring-boot-boilerplate</artifactId>
-    <relativePath>../</relativePath>
     <version>2.7.9</version>
   </parent>
-  <groupId>jp.furplag.sandbox.boot</groupId>
   <artifactId>spring-boot-boilerplate-security</artifactId>
   <name>${project.artifactId}</name>
   <description>dry dry, DRY .</description>
+  <distributionManagement>
+    <repository>
+      <id>internal.repo</id>
+      <name>Temporary Staging Repository</name>
+      <url>file://../target/mvn-repo</url>
+    </repository>
+  </distributionManagement>
 
   <build>
     <plugins>
@@ -36,7 +41,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-compiler-plugin.version}</version>
         <configuration>
           <parameters>true</parameters>
           <annotationProcessorPaths>
@@ -60,7 +64,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>${maven-jar-plugin.version}</version>
         <configuration>
           <archive>
             <manifestEntries>
@@ -74,7 +77,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven-javadoc-plugin.version}</version>
         <configuration>
           <locale>en_US</locale>
           <author>${developer.name}</author>
@@ -98,7 +100,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>${maven-source-plugin.version}</version>
         <executions>
           <execution>
             <id>attach-sources</id>
@@ -112,7 +113,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <argLine>${jacocoArgs} -Dfile.encoding=UTF-8</argLine>
         </configuration>
@@ -121,7 +121,6 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${jacoco-maven-plugin.version}</version>
         <configuration>
           <excludes>
             <exclude>**/**/_*.*</exclude>
@@ -151,7 +150,6 @@
       <plugin>
         <groupId>org.eluder.coveralls</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
-        <version>${coveralls-maven-plugin.version}</version>
         <configuration>
           <repoToken>${project.build.jacoco.repoToken}</repoToken>
         </configuration>
@@ -167,9 +165,8 @@
       <plugin>
         <groupId>com.mycila</groupId>
         <artifactId>license-maven-plugin</artifactId>
-        <version>${license-maven-plugin.version}</version>
         <configuration>
-          <header>.licenseHeader</header>
+          <header>../.licenseHeader</header>
           <properties>
             <owner>${developer.name}</owner>
             <contact>${developer.url}</contact>
@@ -206,26 +203,24 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
-        <version>${maven-deploy-plugin.version}</version>
         <configuration>
-          <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
+          <altDeploymentRepository>internal.repo::default::file://${project.build.outputDirectory}/mvn-repo</altDeploymentRepository>
         </configuration>
       </plugin>
 
       <plugin>
         <groupId>com.github.github</groupId>
         <artifactId>site-maven-plugin</artifactId>
-        <version>${site-maven-plugin.version}</version>
         <configuration>
           <message>Maven artifacts for ${project.version}</message>
           <noJekyll>true</noJekyll>
-          <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>
+          <outputDirectory>${project.build.outputDirectory}/mvn-repo</outputDirectory>
           <branch>refs/heads/mvn-repo</branch>
           <includes>
             <include>**/*</include>
           </includes>
           <merge>true</merge>
-          <repositoryName>${project.name}</repositoryName>
+          <repositoryName>${parent.project.name}</repositoryName>
           <repositoryOwner>${developer.name}</repositoryOwner>
         </configuration>
         <executions>
@@ -291,14 +286,17 @@
     <dependency>
       <groupId>nz.net.ultraq.thymeleaf</groupId>
       <artifactId>thymeleaf-expression-processor</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>nz.net.ultraq.thymeleaf</groupId>
       <artifactId>thymeleaf-layout-dialect</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>nz.net.ultraq.thymeleaf</groupId>
       <artifactId>thymeleaf-spring-environment-dialect</artifactId>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
@@ -321,15 +319,16 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-security</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-thymeleaf</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -364,19 +363,7 @@
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
-      <artifactId>bootstrap-notify</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars</groupId>
       <artifactId>font-awesome</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars</groupId>
-      <artifactId>jquery</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars</groupId>
-      <artifactId>jquery-i18n-properties</artifactId>
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
