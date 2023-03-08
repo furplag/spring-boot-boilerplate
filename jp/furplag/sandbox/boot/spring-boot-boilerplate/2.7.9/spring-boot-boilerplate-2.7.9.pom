@@ -1,0 +1,607 @@
+<!--
+
+    Copyright (C) 2021+ furplag (https://github.com/furplag)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.7.9</version>
+    <relativePath />
+  </parent>
+  <groupId>jp.furplag.sandbox.boot</groupId>
+  <artifactId>spring-boot-boilerplate</artifactId>
+  <version>2.7.9</version>
+  <inceptionYear>2021</inceptionYear>
+  <packaging>pom</packaging>
+  <name>${project.artifactId}</name>
+  <description>a boilerplate for Spring Boot starter configurations . It will make ( slightly ) easier for us to create anything compared to usual setup .</description>
+  <url>${developer.url}/${project.artifactId}</url>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
+  </licenses>
+  <organization />
+  <developers>
+    <developer>
+      <id>${developer.name}</id>
+      <name>${developer.name}</name>
+      <url>${developer.url}</url>
+    </developer>
+  </developers>
+  <scm>
+    <url>${project.url}</url>
+    <connection>scm:git:${project.url}.git</connection>
+    <developerConnection>scm:git:${project.url}.git</developerConnection>
+    <tag>${project.name}-${project.version}</tag>
+  </scm>
+  <distributionManagement>
+    <repository>
+      <id>internal.repo</id>
+      <name>Temporary Staging Repository</name>
+      <url>file://${project.build.directory}/mvn-repo</url>
+    </repository>
+  </distributionManagement>
+  <issueManagement>
+    <url>${project.url}/issues</url>
+    <system>GitHub Issues</system>
+  </issueManagement>
+
+  <properties>
+    <java.version>11</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <project.build.jacoco.repoToken></project.build.jacoco.repoToken>
+
+    <spring-boot-starter.version>${project.version}</spring-boot-starter.version>
+
+    <bootstrap.version>5.2.3</bootstrap.version>
+    <bootstrap-notify.version>3.1.3-1</bootstrap-notify.version>
+    <font-awesome.version>6.3.0</font-awesome.version>
+    <google-java-format.version>1.16.0</google-java-format.version>
+    <guava.version>31.1-jre</guava.version>
+    <lombok.version>1.18.26</lombok.version>
+    <relic.version>5.1.0</relic.version>
+    <thymeleaf-expression-processor.version>3.1.0</thymeleaf-expression-processor.version>
+    <thymeleaf-layout-dialect.version>3.2.0</thymeleaf-layout-dialect.version>
+    <thymeleaf-spring-environment-dialect.version>1.2.0</thymeleaf-spring-environment-dialect.version>
+    <webjars-locator.version>0.46</webjars-locator.version>
+    <webjars-locator-core.version>0.52</webjars-locator-core.version>
+    <woothee-java.version>1.11.0</woothee-java.version>
+
+    <coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
+    <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
+    <license-maven-plugin.version>3.0</license-maven-plugin.version>
+    <site-maven-plugin.version>0.12</site-maven-plugin.version>
+  </properties>
+
+  <build>
+
+    <pluginManagement>
+      <plugins>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
+          <configuration>
+            <parameters>true</parameters>
+            <annotationProcessorPaths>
+              <path>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+              </path>
+              <path>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-configuration-processor</artifactId>
+                <version>${spring-boot-starter.version}</version>
+              </path>
+            </annotationProcessorPaths>
+            <compilerArgs>
+              <arg>-Xlint:all</arg>
+            </compilerArgs>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>${maven-jar-plugin.version}</version>
+          <configuration>
+            <archive>
+              <manifestEntries>
+                <Built-By>${developer.name}</Built-By>
+                <url>${developer.url}</url>
+              </manifestEntries>
+            </archive>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>${maven-javadoc-plugin.version}</version>
+          <configuration>
+            <locale>en_US</locale>
+            <author>${developer.name}</author>
+            <bottom>${javadoc.bottom}</bottom>
+            <additionalJOptions>
+              <additionalJOption>-J-Duser.language=en</additionalJOption>
+              <additionalJOption>-J-Duse.country=US</additionalJOption>
+              <additionalparam>-Xdoclint:none</additionalparam>
+            </additionalJOptions>
+          </configuration>
+          <executions>
+            <execution>
+              <id>attach-javadocs</id>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>${maven-source-plugin.version}</version>
+          <executions>
+            <execution>
+              <id>attach-sources</id>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${maven-surefire-plugin.version}</version>
+          <configuration>
+            <argLine>${jacocoArgs} -Dfile.encoding=UTF-8</argLine>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${jacoco-maven-plugin.version}</version>
+          <configuration>
+            <excludes>
+              <exclude>**/**/_*.*</exclude>
+            </excludes>
+          </configuration>
+          <executions>
+            <execution>
+              <id>prepare-agent</id>
+              <phase>test-compile</phase>
+              <goals>
+                <goal>prepare-agent</goal>
+              </goals>
+              <configuration>
+                <propertyName>jacocoArgs</propertyName>
+              </configuration>
+            </execution>
+            <execution>
+              <id>report</id>
+              <phase>prepare-package</phase>
+              <goals>
+                <goal>report</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.eluder.coveralls</groupId>
+          <artifactId>coveralls-maven-plugin</artifactId>
+          <version>${coveralls-maven-plugin.version}</version>
+          <configuration>
+            <repoToken>${project.build.jacoco.repoToken}</repoToken>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>javax.xml.bind</groupId>
+              <artifactId>jaxb-api</artifactId>
+              <version>${javax-jaxb.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+
+        <plugin>
+          <groupId>com.mycila</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>${license-maven-plugin.version}</version>
+          <configuration>
+            <header>.licenseHeader</header>
+            <properties>
+              <owner>${developer.name}</owner>
+              <contact>${developer.url}</contact>
+            </properties>
+            <excludes>
+              <exclude>**/.licenseHeader</exclude>
+              <exclude>**/LICENSE</exclude>
+              <exclude>**/.*</exclude>
+              <exclude>**/*.config</exclude>
+              <exclude>**/*.yaml</exclude>
+              <exclude>**/*.yml</exclude>
+              <exclude>src/test/resources/**</exclude>
+              <exclude>src/main/resources/**</exclude>
+            </excludes>
+          </configuration>
+          <executions>
+            <execution>
+              <id>format</id>
+              <phase>initialize</phase>
+              <goals>
+                <goal>format</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>check</id>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <phase>test</phase>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>${maven-deploy-plugin.version}</version>
+          <configuration>
+            <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>com.github.github</groupId>
+          <artifactId>site-maven-plugin</artifactId>
+          <version>${site-maven-plugin.version}</version>
+          <configuration>
+            <message>Maven artifacts for ${project.version}</message>
+            <noJekyll>true</noJekyll>
+            <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>
+            <branch>refs/heads/mvn-repo</branch>
+            <includes>
+              <include>**/*</include>
+            </includes>
+            <merge>true</merge>
+            <repositoryName>${project.name}</repositoryName>
+            <repositoryOwner>${developer.name}</repositoryOwner>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>site</goal>
+              </goals>
+              <phase>deploy</phase>
+            </execution>
+          </executions>
+        </plugin>
+
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <parameters>true</parameters>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+            <path>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-configuration-processor</artifactId>
+              <version>${spring-boot-starter.version}</version>
+            </path>
+          </annotationProcessorPaths>
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Built-By>${developer.name}</Built-By>
+              <url>${developer.url}</url>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <locale>en_US</locale>
+          <author>${developer.name}</author>
+          <bottom>${javadoc.bottom}</bottom>
+          <additionalJOptions>
+            <additionalJOption>-J-Duser.language=en</additionalJOption>
+            <additionalJOption>-J-Duse.country=US</additionalJOption>
+            <additionalparam>-Xdoclint:none</additionalparam>
+          </additionalJOptions>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>${jacocoArgs} -Dfile.encoding=UTF-8</argLine>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/**/_*.*</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+            <configuration>
+              <propertyName>jacocoArgs</propertyName>
+            </configuration>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.eluder.coveralls</groupId>
+        <artifactId>coveralls-maven-plugin</artifactId>
+        <configuration>
+          <repoToken>${project.build.jacoco.repoToken}</repoToken>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>${javax-jaxb.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <configuration>
+          <header>.licenseHeader</header>
+          <properties>
+            <owner>${developer.name}</owner>
+            <contact>${developer.url}</contact>
+          </properties>
+          <excludes>
+            <exclude>**/.licenseHeader</exclude>
+            <exclude>**/LICENSE</exclude>
+            <exclude>**/.*</exclude>
+            <exclude>**/*.config</exclude>
+            <exclude>**/*.yaml</exclude>
+            <exclude>**/*.yml</exclude>
+            <exclude>src/test/resources/**</exclude>
+            <exclude>src/main/resources/**</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>format</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>format</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>test</phase>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>com.github.github</groupId>
+        <artifactId>site-maven-plugin</artifactId>
+        <configuration>
+          <message>Maven artifacts for ${project.version}</message>
+          <noJekyll>true</noJekyll>
+          <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>
+          <branch>refs/heads/mvn-repo</branch>
+          <includes>
+            <include>**/*</include>
+          </includes>
+          <merge>true</merge>
+          <repositoryName>${project.name}</repositoryName>
+          <repositoryOwner>${developer.name}</repositoryOwner>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>site</goal>
+            </goals>
+            <phase>deploy</phase>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+
+  </build>
+
+  <dependencyManagement>
+    <dependencies>
+
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.googlejavaformat</groupId>
+        <artifactId>google-java-format</artifactId>
+        <version>${google-java-format.version}</version>
+        <optional>true</optional>
+      </dependency>
+
+      <dependency>
+        <groupId>is.tagomor.woothee</groupId>
+        <artifactId>woothee-java</artifactId>
+        <version>${woothee-java.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>jp.furplag.sandbox</groupId>
+        <artifactId>relic</artifactId>
+        <version>${relic.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>nz.net.ultraq.thymeleaf</groupId>
+        <artifactId>thymeleaf-expression-processor</artifactId>
+        <version>${thymeleaf-expression-processor.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>nz.net.ultraq.thymeleaf</groupId>
+        <artifactId>thymeleaf-layout-dialect</artifactId>
+        <version>${thymeleaf-layout-dialect.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>nz.net.ultraq.thymeleaf</groupId>
+        <artifactId>thymeleaf-spring-environment-dialect</artifactId>
+        <version>${thymeleaf-spring-environment-dialect.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>bootstrap</artifactId>
+        <version>${bootstrap.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>font-awesome</artifactId>
+        <version>${font-awesome.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>webjars-locator</artifactId>
+        <version>${webjars-locator.version}</version>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
+
+  <repositories>
+
+    <repository>
+      <id>jp.furplag.sandbox.relic</id>
+      <url>https://raw.github.com/furplag/relic/mvn-repo/</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+      </snapshots>
+    </repository>
+
+    <repository>
+      <id>jp.furplag.sandbox.boot</id>
+      <url>https://raw.github.com/furplag/spring-boot-boilerplate/mvn-repo/</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+      </snapshots>
+    </repository>
+
+  </repositories>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
+
+</project>
