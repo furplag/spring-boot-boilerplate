@@ -14,7 +14,6 @@
     <p th:text="${T(jp.furplag.sandbox.reflect.SavageReflection).read(#locale)?:'Nope'}"></p>
     <p th:text="${#locale.displayName}"></p>
     <p th:text="${#authentication}"></p>
-    <a th:if="${#authentication.authenticated}" th:href="@{/login}">👺</a>
     <div th:if="${_csrf}">
       <p style="background: rgba(32,32,32, 1); color: #efefef;" th:text="${_csrf}"></p>
       <p style="background: rgba(32,32,32, 1); color: #efefef;" th:text="${_csrf.headerName}"></p>

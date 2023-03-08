@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2021+ furplag (https://github.com/furplag)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package jp.furplag.sandbox.boot.mvc;
 
 import java.io.Serializable;
@@ -72,6 +87,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import nz.net.ultraq.thymeleaf.layoutdialect.LayoutDialect;
 
 public interface MvcBoilerplate {
 
@@ -120,6 +136,8 @@ public interface MvcBoilerplate {
     }
     /** {@inheritDoc} */ @Bean @ConditionalOnProperty(prefix = "project.boilerplate.mvc.i18n", name = "enabled", matchIfMissing = true) @Override public ErrorViewResolver errorViewResolver(ApplicationContext applicationContext, Resources resources) { return super.errorViewResolver(applicationContext, resources); }
     /** {@inheritDoc} */ @Bean @ConditionalOnProperty(prefix = "project.boilerplate.mvc.i18n", name = "enabled", matchIfMissing = true) @Override public LocaleResolver localeResolver() { return super.localeResolver(); }
+    /** {@inheritDoc} */ @Bean @Override public LayoutDialect layoutDialect() { return super.layoutDialect(); }
+    /** {@inheritDoc} */ @Bean @Override public Resources resources() { return super.resources(); }
     /** {@inheritDoc} */ @PostConstruct @Override public void postConstruct() {
       super.postConstruct();
       if (properties.i18n.isEnabled()) {
@@ -149,15 +167,19 @@ public interface MvcBoilerplate {
     @ConditionalOnClass(name = { "javax.validation.executable.ExecutableValidator" })
     @EnableConfigurationProperties({ Properties.class })
     static final class OutdatedValidationMessageAutoConfiguration extends ValidationMessageAutoConfiguration {
-      OutdatedValidationMessageAutoConfiguration(MessageSource messageSource, Properties properties) { super(messageSource, properties); }
+      OutdatedValidationMessageAutoConfiguration(MessageSource messageSource, Properties properties) {
+        super(messageSource, properties);
+      }
     }
-  /* @formatter:on */}
+    /* @formatter:on */}
 
   @Configuration(proxyBeanMethods = false)
   @ConditionalOnSingleCandidate(UseragentBoilerplate.class)
   @EnableConfigurationProperties({ Properties.class })
   static final class UseragentAutoConfiguration extends UseragentBoilerplate {
-    UseragentAutoConfiguration(Properties properties) { super(properties); }
+    UseragentAutoConfiguration(Properties properties) {
+      super(properties);
+    }
   }
 
   @RequiredArgsConstructor
@@ -169,8 +191,7 @@ public interface MvcBoilerplate {
 
     public ErrorViewResolver errorViewResolver(ApplicationContext applicationContext, Resources resources) {
       return new DefaultErrorViewResolver(applicationContext, resources) {
-        @Override
-        public ModelAndView resolveErrorView(HttpServletRequest request, HttpStatus status, Map<String, Object> model) {
+        /** {@inheritDoc} */ @Override public ModelAndView resolveErrorView(HttpServletRequest request, HttpStatus status, Map<String, Object> model) {
           return Trebuchet.Functions.orElse(super.resolveErrorView(request, status, model), (modelAndView) -> {
             Trebuchet.Consumers.orNot(modelAndView, (_modelAndView) -> {
               _modelAndView.getModelMap().addAttribute("traceable", properties.traceableRoles.stream().anyMatch(request::isUserInRole));
@@ -227,6 +248,14 @@ public interface MvcBoilerplate {
           return sessionLocaleResolver.resolveLocale(request);
         }
       };
+    }
+
+    protected LayoutDialect layoutDialect() {
+      return new LayoutDialect();
+    }
+
+    protected Resources resources() {
+      return new Resources();
     }
 
     @PostConstruct protected void postConstruct() {

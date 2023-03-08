@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2021+ furplag (https://github.com/furplag)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package jp.furplag.sandbox.boot.configure.security;
 
 import java.io.IOException;
@@ -46,10 +61,11 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AnonymousConfigurer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -66,6 +82,7 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
@@ -100,16 +117,20 @@ public interface SecurityBoilerplate {
 
   @RequiredArgsConstructor
   @Slf4j
-  static abstract class Boilerplate extends WebSecurityConfigurerAdapter {/* @formatter:off */
+  static abstract class Boilerplate {/* @formatter:off */
 
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnSingleCandidate(Boilerplate.class)
     @EnableConfigurationProperties({ Properties.class, OAuth2ClientProperties.class })
+    @EnableMethodSecurity
+    @EnableWebSecurity
     static final class AutoConfiguration extends Boilerplate implements Ordered {
       AutoConfiguration(Properties properties, OAuth2ClientProperties oAuth2ClientProperties, ServletContext servletContext) { super(properties, oAuth2ClientProperties, servletContext); }
       /** {@inheritDoc} */ @Bean @Override public AccessDeniedHandler accessDeniedHandler() { return super.accessDeniedHandler(); }
       /** {@inheritDoc} */ @Bean @Override public AuthenticationEntryPoint authenticationEntryPoint() { return super.authenticationEntryPoint(); }
-      /** {@inheritDoc} */ @Bean @Override public AuthenticationManager authenticationManager() throws Exception { return super.authenticationManager(); }
+      /** {@inheritDoc} */ @Bean @Override public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception { return super.authenticationManager(authenticationConfiguration); }
+      /** {@inheritDoc} */ @Bean @Override public SecurityFilterChain httpSecurityFilterChain(HttpSecurity http) throws Exception { return super.httpSecurityFilterChain(http); }
+      /** {@inheritDoc} */ @Bean @Override public WebSecurityCustomizer webSecurityCustomizer() throws Exception { return super.webSecurityCustomizer(); }
       /** {@inheritDoc} */ @Bean @Override public PasswordEncoder passwordEncoder() { return super.passwordEncoder(); }
       /** {@inheritDoc} */ @Bean @Override public UserDetailsService userDetailsService() { return super.userDetailsService(); }
       /** {@inheritDoc} */ @Bean @Conditional(ClientsConfiguredCondition.class) @Override public ClientRegistrationRepository clientRegistrationRepository() { return super.clientRegistrationRepository(); }
@@ -144,16 +165,16 @@ public interface SecurityBoilerplate {
 
     final @Getter(AccessLevel.PROTECTED) ServletContext servletContext;
 
-    /** {@inheritDoc} */ @Override protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-      auth.eraseCredentials(true).userDetailsService(userDetailsService()).passwordEncoder(passwordEncoder());
+    /**  */ protected AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+      return authenticationConfiguration.getAuthenticationManager();
     }
 
-    /** {@inheritDoc} */ @Override protected void configure(HttpSecurity http) throws Exception {
+    /**  */ protected SecurityFilterChain httpSecurityFilterChain(HttpSecurity http) throws Exception {
       Trebuchet.Functions.orElse(http, (h) -> {
         configureCsrf(h);
         configureFormLogin(h);
         configureBasicAuth(h);
-
+        configureOAuth2Login(h);
         return h;
       }, (h, ex) -> { log.error("{}", ex.getLocalizedMessage()); return h; })
       .anonymous()
@@ -163,14 +184,16 @@ public interface SecurityBoilerplate {
         .maximumSessions(-1)
       .and().sessionFixation()
         .migrateSession();
+
+      return http.build();
     }
 
-    /** {@inheritDoc} */ @Override public void configure(WebSecurity web) throws Exception {
-      Trebuchet.Consumers.orNot(web.debug(properties.isDebug()), properties.ignores.isEmpty() ? null : properties.ignores, (_web, ignores) -> _web.ignoring().antMatchers(ignores.toArray(String[]::new)));
+    /** */ protected WebSecurityCustomizer webSecurityCustomizer() throws Exception {
+      return (web) -> Trebuchet.Functions.orElse(web, properties.ignores.isEmpty() ? null : properties.ignores, (_web, ignores) -> _web.ignoring().antMatchers(ignores.toArray(String[]::new)), () -> web);
     }
 
     /**
-     * configure HTTP Basic authentication .
+     * configure HTTP BASIC authentication .
      *
      * @param http the {@link HttpSecurity} to modify
      * @throws Exception
@@ -242,9 +265,12 @@ public interface SecurityBoilerplate {
      */
     protected void configureOAuth2Login(HttpSecurity http) throws Exception {
       if (!properties.oAuth2Login.enabled) { http.csrf().disable(); return; }
-      http.oauth2Client((t) -> t
-        .clientRegistrationRepository(clientRegistrationRepository())
-      );
+      http
+      .oauth2Client((t) -> t
+        .clientRegistrationRepository(clientRegistrationRepository()))
+      .oauth2Login((t) -> t
+        .failureHandler(authenticationFailureHandler())
+        .successHandler(authenticationSuccessHandler()));
     }
 
     /**
@@ -330,7 +356,7 @@ public interface SecurityBoilerplate {
     protected ClientRegistrationRepository clientRegistrationRepository() {
       return new InMemoryClientRegistrationRepository(
         Optional.ofNullable(Trebuchet.Functions.orNot(oAuth2ClientProperties, OAuth2ClientPropertiesRegistrationAdapter::getClientRegistrations))
-        .orElseGet(Collections::emptyMap).entrySet().stream().toArray(ClientRegistration[]::new));
+        .orElseGet(Collections::emptyMap).values().toArray(ClientRegistration[]::new));
     }
 
     /**
@@ -369,9 +395,9 @@ public interface SecurityBoilerplate {
     /**
      * get the order value of this object .
      *
-     * @return lower than {@link WebSecurityConfigurerAdapter}'s order .
+     * @return lower than {@link org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter WebSecurityConfigurerAdapter}'s order .
      */
-    public int getOrder() { return Trebuchet.Functions.orElse(WebSecurityConfigurerAdapter.class.getAnnotation(Order.class), Order::value, () -> 100) - 1; }
+    public int getOrder() { return Trebuchet.Functions.orElse("WebSecurityConfigurerAdapter", (t) -> Class.forName(t).getAnnotation(Order.class).value(), () -> 100) - 1; }
 
     /**
      * register Bean any of {@link PasswordEncoder} .
@@ -382,7 +408,7 @@ public interface SecurityBoilerplate {
       return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-    /** {@inheritDoc} */ @Override public UserDetailsService userDetailsService() {
+    /** */ protected UserDetailsService userDetailsService() {
       return new UserDetailsService() {
         /** {@inheritDoc} */
         @Override

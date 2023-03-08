@@ -13,7 +13,7 @@
 <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE" th:text="${#strings.toUpperCase(site)}"></title>
 <meta th:replace="scaffolds/misc::standardHead" th:remove="tag" />
 <script th:inline="javascript">/*<![CDATA[*/
-const refill = (topMargin, bottomMargin) => { document.querySelectorAll('#mainContent+.refill').forEach((refill) => {refill.style.minHeight=`calc(100vh - ${(~~topMargin + ~~bottomMargin)}px)`;}) }
+const refill = (topMargin, bottomMargin) => { document.querySelectorAll('#mainContent+.refill').forEach((refill) => {refill.style.minHeight=`calc(100vh - ${(~~topMargin + ~~bottomMargin + 8)}px)`;}) }
 /*]]>*/</script>
 </head>
 <body class="bg-dark">
@@ -43,7 +43,7 @@ const refill = (topMargin, bottomMargin) => { document.querySelectorAll('#mainCo
 <th:block layout:fragment="mainFormEnd" th:remove="tag"></th:block>
 <th:block layout:fragment="subForm" th:remove="tag"></th:block>
 <th:block th:replace="scaffolds/misc::standardFoot" th:remove="tag"></th:block>
-<script th:inline="javascript">/*<![CDATA[*/$(() => refill($('#header').outerHeight(true), $('#footer').outerHeight(true)));/*]]>*/</script>
+<script th:inline="javascript">/*<![CDATA[*/document.addEventListener('DOMContentLoaded', refill(document.querySelector('#header').getBoundingClientRect().height, document.querySelector('#footer').getBoundingClientRect().height));/*]]>*/</script>
 <th:block layout:fragment="appendScript" th:remove="tag"></th:block>
 </body>
 </html>

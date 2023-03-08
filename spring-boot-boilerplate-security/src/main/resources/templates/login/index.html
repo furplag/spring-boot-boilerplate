@@ -35,11 +35,19 @@
             </div>
           </div>
           <div class="w-100"></div>
-          <th:block th:if="${@environment.getProperty('project.boilerplate.security.o-auth2-login.enabled')?:false}">
-          </th:block>
-          <hr />
           <div class="col d-grid">
             <button type="submit" name="login" class="btn btn-outline-dark btn-lg" th:text="${#messages.msgOrNull('login-form.login.label')?:'Sign in'}"></button>
+          </div>
+          <div class="w-100"></div>
+          <div class="col d-grid">
+            <hr />
+          </div>
+          <div class="w-100"></div>
+          <div class="col d-grid">
+          <th:block th:each="v, vs : ${@clientRegistrationRepository}" th:if="${@environment.getProperty('project.boilerplate.security.o-auth2-login.enabled')?:false}">
+            <a th:href="|@{/oauth2/authorization/}${v.registrationId}|" class="btn btn-outline-dark btn-lg" th:text="${v.clientName}">👺</a>
+            <div th:text="${v}"></div>
+          </th:block>
           </div>
           <div class="w-100"></div>
           <div class="col text-center" th:with="exception=${SPRING_SECURITY_LAST_EXCEPTION?:SPRING_SECURITY_403_EXCEPTION}">
