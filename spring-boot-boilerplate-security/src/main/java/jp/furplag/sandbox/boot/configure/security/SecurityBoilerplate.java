@@ -59,6 +59,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AnonymousConfigurer;
@@ -166,11 +167,25 @@ public interface SecurityBoilerplate {
 
     final @Getter(AccessLevel.PROTECTED) ServletContext servletContext;
 
-    /**  */ protected AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    /**
+     * returns {@link AuthenticationManager} that configured .
+     *
+     * @param authenticationConfiguration {@link AuthenticationConfiguration}
+     * @return {@link AuthenticationManager}
+     * @throws Exception
+     */
+    protected AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
       return authenticationConfiguration.getAuthenticationManager();
     }
 
-    /**  */ protected SecurityFilterChain httpSecurityFilterChain(HttpSecurity http) throws Exception {
+    /**
+     * returns {@link SecurityFilterChain} that configured .
+     *
+     * @param http {@link HttpSecurity} may not be {@code null}
+     * @return {@link SecurityFilterChain}
+     * @throws Exception
+     */
+    protected SecurityFilterChain httpSecurityFilterChain(HttpSecurity http) throws Exception {
       return Trebuchet.Functions.orElse(http, (h) -> {
         configureCsrf(h);
         configureFormLogin(h);
@@ -186,7 +201,12 @@ public interface SecurityBoilerplate {
       }).build();
     }
 
-    /** */ protected WebSecurityCustomizer webSecurityCustomizer() throws Exception {
+    /**
+     *
+     * @return {@link WebSecurityCustomizer}
+     * @throws Exception
+     */
+    protected WebSecurityCustomizer webSecurityCustomizer() throws Exception {
       return (web) -> Trebuchet.Functions.orElse(web, properties.ignores.isEmpty() ? null : properties.ignores, (_web, ignores) -> _web.ignoring().requestMatchers(ignores.toArray(String[]::new)), () -> web);
     }
 
@@ -393,7 +413,7 @@ public interface SecurityBoilerplate {
     /**
      * get the order value of this object .
      *
-     * @return lower than {@link org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter WebSecurityConfigurerAdapter}'s order .
+     * @return lower than security configuration's order .
      */
     public int getOrder() { return Trebuchet.Functions.orElse("WebSecurityConfigurerAdapter", (t) -> Class.forName(t).getAnnotation(Order.class).value(), () -> 100) - 1; }
 
@@ -406,7 +426,12 @@ public interface SecurityBoilerplate {
       return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-    /** */ protected UserDetailsService userDetailsService() {
+    /**
+     * returns {@link UserDetailsService} for authentication .
+     *
+     * @return {@link UserDetailsService}
+     */
+    protected UserDetailsService userDetailsService() {
       return new UserDetailsService() {
         /** {@inheritDoc} */
         @Override
@@ -434,6 +459,7 @@ public interface SecurityBoilerplate {
       };
     }
 
+    /** post initialization process . */
     @PostConstruct protected void postConstruct() {
       log.info("\n{}\n  basic    : {}\n  csrf     : {}\n  formLogin: {}\n  oAuth2Login: {}", properties, properties.basic, properties.csrf, properties.formLogin, properties.oAuth2Login);
     }
@@ -574,6 +600,7 @@ public interface SecurityBoilerplate {
      */
     public boolean isEnabled() { return enabled; }
 
+    /** post initialization process . */
     @PostConstruct
     protected void postConstruct() {
       defaults();
@@ -632,6 +659,7 @@ public interface SecurityBoilerplate {
      */
     public boolean isEnabled() { return enabled; }
 
+    /** post initialization process . */
     @PostConstruct
     protected void postConstruct() {
       defaults();
@@ -716,6 +744,7 @@ public interface SecurityBoilerplate {
      */
     public boolean isLogoutConfirmRequired() { return getLogoutConfirmRequired(); }
 
+    /** post initialization process . */
     @PostConstruct
     protected void postConstruct() {
       defaults();
@@ -774,6 +803,7 @@ public interface SecurityBoilerplate {
      */
     public boolean isEnabled() { return enabled; }
 
+    /** post initialization process . */
     @PostConstruct
     protected void postConstruct() {
       defaults();
