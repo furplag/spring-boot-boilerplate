@@ -86,7 +86,7 @@
             <configuration>
               <addOutputDirectory>false</addOutputDirectory>
               <sourceDirectory>src/main/java</sourceDirectory>
-              <outputDirectory>${project.build.directory}/delombok</outputDirectory>
+              <outputDirectory>${project.build.directory}/generated-sources/delombok</outputDirectory>
             </configuration>
            </execution>
         </executions>
@@ -104,7 +104,7 @@
             <additionalJOption>-J-Duse.country=US</additionalJOption>
             <additionalparam>-Xdoclint:none</additionalparam>
           </additionalJOptions>
-          <sourcepath>target/generated-sources/delombok</sourcepath>
+          <sourcepath>${project.build.directory}/generated-sources/delombok</sourcepath>
         </configuration>
         <executions>
           <execution>
