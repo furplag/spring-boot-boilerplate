@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2021+ furplag (https://github.com/furplag)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,12 @@
  */
 package jp.furplag.sandbox.boot.mvc;
 
+import com.google.common.base.CaseFormat;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,12 +31,17 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.annotation.PostConstruct;
 import javax.annotation.concurrent.Immutable;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import jp.furplag.sandbox.l10n.Localizr;
+import jp.furplag.sandbox.reflect.SavageReflection;
+import jp.furplag.sandbox.trebuchet.Trebuchet;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import nz.net.ultraq.thymeleaf.layoutdialect.LayoutDialect;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -42,9 +52,9 @@ import org.springframework.boot.autoconfigure.web.WebProperties.Resources;
 import org.springframework.boot.autoconfigure.web.servlet.error.DefaultErrorViewResolver;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.boot.context.properties.bind.ConstructorBinding;
 import org.springframework.boot.validation.MessageInterpolatorFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
@@ -76,18 +86,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
-
-import com.google.common.base.CaseFormat;
-
-import jp.furplag.sandbox.l10n.Localizr;
-import jp.furplag.sandbox.reflect.SavageReflection;
-import jp.furplag.sandbox.trebuchet.Trebuchet;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-import nz.net.ultraq.thymeleaf.layoutdialect.LayoutDialect;
 
 public interface MvcBoilerplate {
 
@@ -155,7 +153,7 @@ public interface MvcBoilerplate {
       protected ValidationMessageAutoConfiguration(MessageSource messageSource, Properties properties) { super(messageSource, properties); }
       /** {@inheritDoc} */ @Override public MessageCodesResolver getMessageCodesResolver() { return properties.i18n.isEnabled() ? messageCodeResolver() : null; }
       /** {@inheritDoc} */ @Override public Validator getValidator() { return properties.i18n.isEnabled() ? validator() : null; }
-      @PostConstruct public void postConstruct() {
+      /** {@inheritDoc} */ @PostConstruct public void postConstruct() {
         if (properties.i18n.isEnabled()) {
           log.info("ready to I18N support for validation, ( API: \"{}.validation\", prefix: \"{}\" ) .", this instanceof OutdatedValidationMessageAutoConfiguration ? "javax" : "jakarta", properties.i18n.validationMessagePrefix);
         }
@@ -206,6 +204,11 @@ public interface MvcBoilerplate {
       };
     }
 
+    /**
+     * returns a {@link LocaleChangeInterceptor} .
+     *
+     * @return {@link LocaleChangeInterceptor}
+     */
     protected LocaleChangeInterceptor localeChangeInterceptor() {
       return new LocaleChangeInterceptor() {{
         setIgnoreInvalidLocale(false);
@@ -219,21 +222,21 @@ public interface MvcBoilerplate {
      * @return {@link LocaleResolver}
      */
     protected LocaleResolver localeResolver() {
-      return new CookieLocaleResolver() {
+      return new CookieLocaleResolver(properties.i18n.paramName) {
         {
           sessionLocaleResolver = new SessionLocaleResolver() {{
             setLocaleAttributeName(properties.i18n.paramName);
             setDefaultLocale(properties.i18n.defaultLocale);
             setDefaultTimeZone(properties.i18n.defaultTimeZone);
           }};
-          setCookieName(properties.i18n.paramName);
           setDefaultLocale(properties.i18n.defaultLocale);
           setDefaultTimeZone(properties.i18n.defaultTimeZone);
           setRejectInvalidCookies(true);
 
           setCookieDomain(properties.i18n.cookieDomain);
           setCookiePath(StringUtils.defaultIfBlank(properties.i18n.cookiePath, "/"));
-          setCookieMaxAge(properties.i18n.cookieMaxAge);
+          setCookieMaxAge(Duration.ofSeconds(Objects.requireNonNullElse(properties.i18n.cookieMaxAge, -1)));
+
           setCookieSecure(Objects.requireNonNullElse(properties.i18n.cookieSecure, false));
           setCookieHttpOnly(properties.i18n.cookieHttpOnly);
         }
@@ -250,14 +253,25 @@ public interface MvcBoilerplate {
       };
     }
 
+    /**
+     * returns a dialect for thymeleaf template ( s ) .
+     *
+     * @return {@link LayoutDialect}
+     */
     protected LayoutDialect layoutDialect() {
       return new LayoutDialect();
     }
 
+    /**
+     * returns web resources that specified in {@link WebProperties} .
+     *
+     * @return {@link Resources}
+     */
     protected Resources resources() {
       return new Resources();
     }
 
+    /** post initialization process . */
     @PostConstruct protected void postConstruct() {
       Optional.ofNullable(webProperties.getLocale()).ifPresent((l) -> SavageReflection.set(properties.i18n, "defaultLocale", l));
       log.info("\n{}\n  i18n      : {}\n  useragent : {}", properties, properties.i18n, properties.useragent);
@@ -270,10 +284,20 @@ public interface MvcBoilerplate {
     final @Getter(AccessLevel.PROTECTED) MessageSource messageSource;
     final @Getter(AccessLevel.PROTECTED) Properties properties;
 
+    /**
+     * returns {@link MessageCodesResolver} that using for validation messages .
+     *
+     * @return {@link MessageCodesResolver}
+     */
     protected MessageCodesResolver messageCodeResolver() {
       return new DefaultMessageCodesResolver() {{ setPrefix(properties.i18n.getValidationMessagePrefix()); }};
     }
 
+    /**
+     * returns a {@link Validator} .
+     *
+     * @return {@link Validator}
+     */
     protected Validator validator() {
       return new LocalValidatorFactoryBean() {{
         setValidationMessageSource(messageSource);
@@ -353,6 +377,8 @@ public interface MvcBoilerplate {
         });
       }
     }
+
+    /** post initialization process . */
     @PostConstruct
     void postConstruct() {
       if (properties.useragent.isEnabled()) {
@@ -362,9 +388,9 @@ public interface MvcBoilerplate {
   /* @formatter:on */}
 
   @Immutable
-  @ConstructorBinding
   @ConfigurationProperties(prefix = "project.boilerplate.mvc", ignoreInvalidFields = true, ignoreUnknownFields = true)
-  @lombok.Value
+  @RequiredArgsConstructor(onConstructor = @__({ @ConstructorBinding }))
+  @Value
   static final class Properties {/* @formatter:off */
 
     @NestedConfigurationProperty
@@ -375,6 +401,7 @@ public interface MvcBoilerplate {
 
     /** roles who enable to viewing error details in error view ( default: [ 'ROOT', 'ADMIN' ] ) . */ @Getter final List<String> traceableRoles;
 
+    /** post initialization process . */
     @PostConstruct
     protected void postConstruct() {
       Optional.ofNullable(i18n).ifPresentOrElse((x) -> {}, () -> SavageReflection.set(this, "i18n", new I18nProperties(null, null, null, null, null, null, null, null, null, null)));
@@ -391,9 +418,9 @@ public interface MvcBoilerplate {
   /* @formatter:on */}
 
   @Immutable
-  @ConstructorBinding
   @ConfigurationProperties(prefix = "project.boilerplate.mvc.i18n", ignoreInvalidFields = true, ignoreUnknownFields = true)
-  @lombok.Value
+  @RequiredArgsConstructor(onConstructor = @__({ @ConstructorBinding }))
+  @Value
   static class I18nProperties {/* @formatter:off */
 
     /** if true, enable to I18N support ( default: {@code true} ) . */ @Getter final Boolean enabled;
@@ -427,6 +454,7 @@ public interface MvcBoilerplate {
      */
     public boolean isEnabled() { return enabled; }
 
+    /** post initialization process . */
     @PostConstruct
     protected void postConstruct() { defaults(); }
 
@@ -446,9 +474,9 @@ public interface MvcBoilerplate {
   /* @formatter:on */}
 
   @Immutable
-  @ConstructorBinding
   @ConfigurationProperties(prefix = "project.boilerplate.mvc.useragent", ignoreInvalidFields = true, ignoreUnknownFields = true)
-  @lombok.Value
+  @RequiredArgsConstructor(onConstructor = @__({ @ConstructorBinding }))
+  @Value
   static class UseragentProperties {/* @formatter:off */
 
     /** if true, adds user-agent support ( default: {@code true} ) . */ @Getter() final Boolean enabled;
@@ -462,6 +490,7 @@ public interface MvcBoilerplate {
      */
     public boolean isEnabled() { return enabled; }
 
+    /** post initialization process . */
     @PostConstruct
     protected void postConstruct() { defaults(); }
 

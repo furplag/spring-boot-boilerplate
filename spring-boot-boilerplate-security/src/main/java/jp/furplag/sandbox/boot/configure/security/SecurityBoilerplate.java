@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2021+ furplag (https://github.com/furplag)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,15 +27,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.concurrent.Immutable;
 import javax.security.auth.login.AccountExpiredException;
 import javax.security.auth.login.CredentialExpiredException;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,12 +39,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.autoconfigure.security.oauth2.client.ClientsConfiguredCondition;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientPropertiesRegistrationAdapter;
+import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientPropertiesMapper;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.boot.context.properties.bind.ConstructorBinding;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -61,9 +55,11 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AnonymousConfigurer;
@@ -95,7 +91,6 @@ import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
-import org.springframework.security.web.csrf.LazyCsrfTokenRepository;
 import org.springframework.security.web.csrf.MissingCsrfTokenException;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.stereotype.Controller;
@@ -105,12 +100,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.support.MultipartFilter;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jp.furplag.sandbox.reflect.SavageReflection;
 import jp.furplag.sandbox.text.Commonizr;
 import jp.furplag.sandbox.trebuchet.Trebuchet;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 public interface SecurityBoilerplate {
@@ -165,31 +167,47 @@ public interface SecurityBoilerplate {
 
     final @Getter(AccessLevel.PROTECTED) ServletContext servletContext;
 
-    /**  */ protected AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    /**
+     * returns {@link AuthenticationManager} that configured .
+     *
+     * @param authenticationConfiguration {@link AuthenticationConfiguration}
+     * @return {@link AuthenticationManager}
+     * @throws Exception
+     */
+    protected AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
       return authenticationConfiguration.getAuthenticationManager();
     }
 
-    /**  */ protected SecurityFilterChain httpSecurityFilterChain(HttpSecurity http) throws Exception {
-      Trebuchet.Functions.orElse(http, (h) -> {
+    /**
+     * returns {@link SecurityFilterChain} that configured .
+     *
+     * @param http {@link HttpSecurity} may not be {@code null}
+     * @return {@link SecurityFilterChain}
+     * @throws Exception
+     */
+    protected SecurityFilterChain httpSecurityFilterChain(HttpSecurity http) throws Exception {
+      return Trebuchet.Functions.orElse(http, (h) -> {
         configureCsrf(h);
         configureFormLogin(h);
         configureBasicAuth(h);
         configureOAuth2Login(h);
         return h;
       }, (h, ex) -> { log.error("{}", ex.getLocalizedMessage()); return h; })
-      .anonymous()
-      .and().headers()
-        .frameOptions().disable()
-      .and().sessionManagement()
-        .maximumSessions(-1)
-      .and().sessionFixation()
-        .migrateSession();
-
-      return http.build();
+      .anonymous(Customizer.withDefaults())
+      .headers((t) -> t.frameOptions((_t) -> _t.disable()))
+      .sessionManagement((t) -> {
+        t.maximumSessions(-1);
+        t.sessionFixation((_t) -> _t.migrateSession());
+      }).build();
     }
 
-    /** */ protected WebSecurityCustomizer webSecurityCustomizer() throws Exception {
-      return (web) -> Trebuchet.Functions.orElse(web, properties.ignores.isEmpty() ? null : properties.ignores, (_web, ignores) -> _web.ignoring().antMatchers(ignores.toArray(String[]::new)), () -> web);
+    /**
+     *
+     * @return {@link WebSecurityCustomizer}
+     * @throws Exception
+     */
+    protected WebSecurityCustomizer webSecurityCustomizer() throws Exception {
+      return (web) -> Trebuchet.Functions.orElse(web, properties.ignores.isEmpty() ? null : properties.ignores, (_web, ignores) -> _web.ignoring().requestMatchers(ignores.toArray(String[]::new)), () -> web);
     }
 
     /**
@@ -209,10 +227,10 @@ public interface SecurityBoilerplate {
      * @throws Exception
      */
     protected void configureCsrf(HttpSecurity http) throws Exception {
-      if (!properties.csrf.enabled) { http.csrf().disable(); return; }
+      if (!properties.csrf.enabled) { http.csrf((t) -> t.disable()); return; }
       http.csrf((t) -> t
         .csrfTokenRepository(csrfTokenRepository())
-        .ignoringAntMatchers(properties.csrf.ignores.toArray(String[]::new)))
+        .ignoringRequestMatchers(properties.csrf.ignores.toArray(String[]::new)))
       .addFilterBefore(new MultipartFilter() {{ setServletContext(servletContext); }}, CsrfFilter.class);
     }
 
@@ -224,18 +242,18 @@ public interface SecurityBoilerplate {
      */
     protected void configureFormLogin(HttpSecurity http) throws Exception {
       if (!properties.formLogin.enabled) {
-        http.authorizeRequests((t) -> t
-          .mvcMatchers((properties.basic.enabled ? properties.formLogin.anonymouslyAccessibles : List.of("/**")).stream().distinct().toArray(String[]::new)).permitAll()
-          .mvcMatchers("/actuator/**" /* ignore any roles if no login flows . */).hasAnyRole("ACTUATOR", "ROOT")
+        http.authorizeHttpRequests((t) -> t
+          .requestMatchers((properties.basic.enabled ? properties.formLogin.anonymouslyAccessibles : List.of("/**")).stream().distinct().toArray(String[]::new)).permitAll()
+          .requestMatchers("/actuator/**" /* ignore any roles if no login flows . */).hasAnyRole("ACTUATOR", "ROOT")
           .anyRequest().authenticated())
-        .formLogin().disable()
+        .formLogin((t) -> t.disable())
         .anonymous((t) -> Optional.ofNullable(properties.basic.enabled || properties.formLogin.enabled ? null : t).ifPresent(AnonymousConfigurer::disable));
 
         return;
       }
-      http.authorizeRequests((t) -> t
-        .mvcMatchers(properties.formLogin.anonymouslyAccessibles.stream().distinct().toArray(String[]::new)).permitAll()
-        .mvcMatchers("/actuator/**").hasAnyRole("ACTUATOR", "ROOT")
+      http.authorizeHttpRequests((t) -> t
+        .requestMatchers(properties.formLogin.anonymouslyAccessibles.stream().distinct().toArray(String[]::new)).permitAll()
+        .requestMatchers("/actuator/**").hasAnyRole("ACTUATOR", "ROOT")
         .anyRequest().authenticated())
       .formLogin((t) -> t
         .loginPage(properties.formLogin.loginUrl)
@@ -253,7 +271,7 @@ public interface SecurityBoilerplate {
       .exceptionHandling((t) -> t
         .authenticationEntryPoint(authenticationEntryPoint())
         .accessDeniedHandler(accessDeniedHandler()))
-      .anonymous().disable()
+      .anonymous((t) -> t.disable())
       ;
     }
 
@@ -264,7 +282,7 @@ public interface SecurityBoilerplate {
      * @throws Exception
      */
     protected void configureOAuth2Login(HttpSecurity http) throws Exception {
-      if (!properties.oAuth2Login.enabled) { http.csrf().disable(); return; }
+      if (!properties.oAuth2Login.enabled) { http.csrf((t) -> t.disable()); return; }
       http
       .oauth2Client((t) -> t
         .clientRegistrationRepository(clientRegistrationRepository()))
@@ -355,7 +373,7 @@ public interface SecurityBoilerplate {
      */
     protected ClientRegistrationRepository clientRegistrationRepository() {
       return new InMemoryClientRegistrationRepository(
-        Optional.ofNullable(Trebuchet.Functions.orNot(oAuth2ClientProperties, OAuth2ClientPropertiesRegistrationAdapter::getClientRegistrations))
+        Optional.ofNullable(Trebuchet.Functions.orNot(oAuth2ClientProperties, (properties) -> new OAuth2ClientPropertiesMapper(properties).asClientRegistrations()))
         .orElseGet(Collections::emptyMap).values().toArray(ClientRegistration[]::new));
     }
 
@@ -365,7 +383,7 @@ public interface SecurityBoilerplate {
      * @return {@link CsrfTokenRepository}
      */
     protected CsrfTokenRepository csrfTokenRepository() {
-      return new LazyCsrfTokenRepository(new CsrfTokenRepository() {
+      return new  CsrfTokenRepository() {
         private final HttpSessionCsrfTokenRepository httpSessionCsrfTokenRepository = new HttpSessionCsrfTokenRepository();
         {
           httpSessionCsrfTokenRepository.setHeaderName(properties.csrf.headerName);
@@ -389,13 +407,13 @@ public interface SecurityBoilerplate {
         /** {@inheritDoc} */ @Override public CsrfToken loadToken(HttpServletRequest request) { return httpSessionCsrfTokenRepository.loadToken(request); }
 
         /** {@inheritDoc} */ @Override public CsrfToken generateToken(HttpServletRequest request) { return httpSessionCsrfTokenRepository.generateToken(request); }
-      });
+      };
     }
 
     /**
      * get the order value of this object .
      *
-     * @return lower than {@link org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter WebSecurityConfigurerAdapter}'s order .
+     * @return lower than security configuration's order .
      */
     public int getOrder() { return Trebuchet.Functions.orElse("WebSecurityConfigurerAdapter", (t) -> Class.forName(t).getAnnotation(Order.class).value(), () -> 100) - 1; }
 
@@ -408,7 +426,12 @@ public interface SecurityBoilerplate {
       return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-    /** */ protected UserDetailsService userDetailsService() {
+    /**
+     * returns {@link UserDetailsService} for authentication .
+     *
+     * @return {@link UserDetailsService}
+     */
+    protected UserDetailsService userDetailsService() {
       return new UserDetailsService() {
         /** {@inheritDoc} */
         @Override
@@ -436,6 +459,7 @@ public interface SecurityBoilerplate {
       };
     }
 
+    /** post initialization process . */
     @PostConstruct protected void postConstruct() {
       log.info("\n{}\n  basic    : {}\n  csrf     : {}\n  formLogin: {}\n  oAuth2Login: {}", properties, properties.basic, properties.csrf, properties.formLogin, properties.oAuth2Login);
     }
@@ -516,9 +540,9 @@ public interface SecurityBoilerplate {
   /* @formatter:on */}
 
   @Immutable
-  @ConstructorBinding
   @ConfigurationProperties(prefix = "project.boilerplate.security", ignoreInvalidFields = true, ignoreUnknownFields = true)
-  @lombok.Value
+  @RequiredArgsConstructor(onConstructor = @__({ @ConstructorBinding }))
+  @Value
   static final class Properties {/* @formatter:off */
 
     @NestedConfigurationProperty BasicAuthProperties basic;
@@ -562,9 +586,9 @@ public interface SecurityBoilerplate {
    *
    */
   @Immutable
-  @ConstructorBinding
   @ConfigurationProperties(prefix = "project.boilerplate.security.basic", ignoreInvalidFields = true, ignoreUnknownFields = true)
-  @lombok.Value
+  @RequiredArgsConstructor(onConstructor = @__({ @ConstructorBinding }))
+  @Value
   static class BasicAuthProperties {/* @formatter:off */
 
     /** if true, enable to HTTP Basic authentication ( default: {@code false} ) . */ @Getter final Boolean enabled;
@@ -576,6 +600,7 @@ public interface SecurityBoilerplate {
      */
     public boolean isEnabled() { return enabled; }
 
+    /** post initialization process . */
     @PostConstruct
     protected void postConstruct() {
       defaults();
@@ -593,9 +618,9 @@ public interface SecurityBoilerplate {
    *
    */
   @Immutable
-  @ConstructorBinding
   @ConfigurationProperties(prefix = "project.boilerplate.security.csrf", ignoreInvalidFields = true, ignoreUnknownFields = true)
-  @lombok.Value
+  @RequiredArgsConstructor(onConstructor = @__({ @ConstructorBinding }))
+  @Value
   static class CsrfProperties {/* @formatter:off */
 
     /** if true, adds CSRF support ( default: {@code true} ) . */ @Getter() final Boolean enabled;
@@ -634,6 +659,7 @@ public interface SecurityBoilerplate {
      */
     public boolean isEnabled() { return enabled; }
 
+    /** post initialization process . */
     @PostConstruct
     protected void postConstruct() {
       defaults();
@@ -664,9 +690,9 @@ public interface SecurityBoilerplate {
    *
    */
   @Immutable
-  @ConstructorBinding
   @ConfigurationProperties(prefix = "project.boilerplate.security.form-login", ignoreInvalidFields = true, ignoreUnknownFields = true)
-  @lombok.Value
+  @RequiredArgsConstructor(onConstructor = @__({ @ConstructorBinding }))
+  @Value
   static class FormloginProperties {/* @formatter:off */
 
     /** path patterns of accessible anonymously ( default: static resources, "/error" "/webjars" and few paths which necesaly to access before authentication ) . */ @Getter final List<String> anonymouslyAccessibles;
@@ -718,6 +744,7 @@ public interface SecurityBoilerplate {
      */
     public boolean isLogoutConfirmRequired() { return getLogoutConfirmRequired(); }
 
+    /** post initialization process . */
     @PostConstruct
     protected void postConstruct() {
       defaults();
@@ -762,9 +789,9 @@ public interface SecurityBoilerplate {
    *
    */
   @Immutable
-  @ConstructorBinding
   @ConfigurationProperties(prefix = "project.boilerplate.security.o-auth2-login", ignoreInvalidFields = true, ignoreUnknownFields = true)
-  @lombok.Value
+  @RequiredArgsConstructor(onConstructor = @__({ @ConstructorBinding }))
+  @Value
   static class OAuth2LoginProperties {/* @formatter:off */
 
     /** if true, enable to Form login ( default: {@code true} ) . */ @Getter final Boolean enabled;
@@ -776,6 +803,7 @@ public interface SecurityBoilerplate {
      */
     public boolean isEnabled() { return enabled; }
 
+    /** post initialization process . */
     @PostConstruct
     protected void postConstruct() {
       defaults();
